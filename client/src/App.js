@@ -4,6 +4,8 @@ import getWeb3 from "./getWeb3";
 
 import "./App.css";
 
+// VIDEO 2h https://www.youtube.com/watch?v=CgXQC4dbGUE&list=PLqqTsZSw6kjlo3ZIWoWcM31E_F-17AWEH&index=5
+
 class App extends Component {
   state = { storageValue: 0, web3: null, accounts: null, contract: null };
 
