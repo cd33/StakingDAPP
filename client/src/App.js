@@ -1,75 +1,177 @@
-import React, { Component } from "react";
-import SimpleStorageContract from "./contracts/SimpleStorage.json";
+import React, { useEffect, useState } from "react";
+import Dai from "./contracts/Dai.json";
+import Bibscoin from "./contracts/Bibscoin.json";
+import BibsStaking from "./contracts/BibsStaking.json";
 import getWeb3 from "./getWeb3";
+import 'bootstrap/dist/css/bootstrap.min.css';
+import Navbar from "./components/Navbar";
+import Content from "./components/Content";
+import { Spinner } from 'react-bootstrap';
 
 import "./App.css";
 
 // VIDEO 2h https://www.youtube.com/watch?v=CgXQC4dbGUE&list=PLqqTsZSw6kjlo3ZIWoWcM31E_F-17AWEH&index=5
 
-class App extends Component {
-  state = { storageValue: 0, web3: null, accounts: null, contract: null };
+const App = () => {
+  const [web3, setWeb3] = useState(null);
+  const [accounts, setAccounts] = useState(null);
+  const [dai, setDai] = useState(null);
+  const [daiBalance, setDaiBalance] = useState(null);
+  const [daiInput, setDaiInput] = useState(null);
+  const [daiInputErr, setDaiInputErr] = useState(null);
+  const [bibscoin, setBibscoin] = useState(null);
+  const [bibscoinBalance, setBibscoinBalance] = useState(null);
+  const [bibsStaking, setBibsStaking] = useState(null);
+  const [bibsStakingBalance, setBibsStakingBalance] = useState(null);
 
-  componentDidMount = async () => {
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const init = async () => {
+      try {
+        // Get network provider and web3 instance.
+        const web3 = await getWeb3();
+
+        web3.eth.handleRevert = true;
+        // Use web3 to get the user's accounts.
+        const accounts = await web3.eth.getAccounts();
+
+        if (window.ethereum) {
+          window.ethereum.on('accountsChanged', (accounts) => {
+            setAccounts({ accounts });
+            window.location.reload();
+          });
+
+          window.ethereum.on('chainChanged', (_chainId) => window.location.reload());
+        }
+
+        // Get the contract instance.
+        const networkId = await web3.eth.net.getId();
+
+        // Load Dai
+        const daiData = Dai.networks[networkId];
+        const dai = new web3.eth.Contract(Dai.abi, daiData && daiData.address);
+        setDai(dai);
+        let daiBalance = await dai.methods.balanceOf(accounts[0]).call();
+        setDaiBalance(daiBalance);
+
+        // Load Bibscoin
+        const bibscoinData = Bibscoin.networks[networkId];
+        const bibscoin = new web3.eth.Contract(Bibscoin.abi, bibscoinData && bibscoinData.address);
+        setBibscoin(bibscoin);
+        let bibscoinBalance = await bibscoin.methods.balanceOf(accounts[0]).call();
+        setBibscoinBalance(bibscoinBalance);
+
+        // Load BibsStaking
+        const bibsStakingData = BibsStaking.networks[networkId];
+        const bibsStaking = new web3.eth.Contract(BibsStaking.abi, bibsStakingData && bibsStakingData.address);
+        setBibsStaking(bibsStaking);
+        let bibsStakingBalance = await bibsStaking.methods.stakingBalance(accounts[0]).call();
+        setBibsStakingBalance(bibsStakingBalance);
+
+
+        // Set web3, accounts, and the contracts to the state, and then proceed
+        setWeb3(web3);
+        setAccounts(accounts);
+      } catch (error) {
+        // Catch any errors for any of the above operations.
+        alert(`Failed to load web3, accounts, or contract. Check console for details.`,);
+        console.error(error);
+      }
+    }
+    init();
+  }, []);
+
+  const stake = async () => {
+    // setLoading(true)
+    const daiAmount = web3.utils.toWei(daiInput.value, 'Ether');
     try {
-      // Get network provider and web3 instance.
-      const web3 = await getWeb3();
+      dai.methods.approve(bibsStaking._address, daiAmount).send({ from: accounts[0] }).on('transactionHash', (hash) => {
+        bibsStaking.methods.stake(daiAmount).send({ from: accounts[0] }).on('transactionHash', (hash) => {
+          // setLoading(false);
+          window.location.reload();
+        })
+      })
+    }
+    catch (error) {
+      // setDaiInputErr(error.message);
+      console.log(error.message)
+    }
+  };
 
-      // Use web3 to get the user's accounts.
-      const accounts = await web3.eth.getAccounts();
+  // EVENTS
+  // useEffect(() => {
+  //   if (bibsStaking !== null) {
+  //     bibsStaking.events.Unstaked({fromBlock: 0})
+  //     .on('data', event => alert(`Transaction Approuved ${web3.utils.fromWei(event.returnValues.amount, 'Ether')} DAI`))
+  //     .on('error', err => alert(err.message))   
+  //   }
+  // }, [bibsStaking])
 
-      // Get the contract instance.
-      const networkId = await web3.eth.net.getId();
-      const deployedNetwork = SimpleStorageContract.networks[networkId];
-      const instance = new web3.eth.Contract(
-        SimpleStorageContract.abi,
-        deployedNetwork && deployedNetwork.address,
-      );
-
-      // Set web3, accounts, and contract to the state, and then proceed with an
-      // example of interacting with the contract's methods.
-      this.setState({ web3, accounts, contract: instance }, this.runExample);
+  const unstake = async () => {
+    try {
+      const daiAmount = web3.utils.toWei(daiInput.value, 'Ether');
+      await bibsStaking.methods.unstake(daiAmount).send({ from: accounts[0] }, function (err) {
+        if (err) {
+          if (err.message.length < 100) {
+            alert(err.message)
+            window.location.reload();
+          } else {
+            alert(err.message.substring(149, 177));
+            window.location.reload();
+          }
+        } else {
+          alert("Transaction Approuved");
+          window.location.reload();
+        }
+      })
     } catch (error) {
-      // Catch any errors for any of the above operations.
-      alert(
-        `Failed to load web3, accounts, or contract. Check console for details.`,
-      );
-      console.error(error);
+      // setDaiInputErr(error.message);
+      console.log(error.message);
     }
-  };
-
-  runExample = async () => {
-    const { accounts, contract } = this.state;
-
-    // Stores a given value, 5 by default.
-    await contract.methods.set(5).send({ from: accounts[0] });
-
-    // Get the value from the contract to prove it worked.
-    const response = await contract.methods.get().call();
-
-    // Update state with the result.
-    this.setState({ storageValue: response });
-  };
-
-  render() {
-    if (!this.state.web3) {
-      return <div>Loading Web3, accounts, and contract...</div>;
-    }
-    return (
-      <div className="App">
-        <h1>Good to Go!</h1>
-        <p>Your Truffle Box is installed and ready.</p>
-        <h2>Smart Contract Example</h2>
-        <p>
-          If your contracts compiled and migrated successfully, below will show
-          a stored value of 5 (by default).
-        </p>
-        <p>
-          Try changing the value stored on <strong>line 42</strong> of App.js.
-        </p>
-        <div>The stored value is: {this.state.storageValue}</div>
-      </div>
-    );
   }
+
+  const issueReward = async () => {
+    try {
+      await bibsStaking.methods.issueReward().send({ from: accounts[0] }).on('transactionHash', (hash) => {
+        window.location.reload();
+      })
+    } catch (error) {
+      // setDaiInputErr(error.message);
+      console.log(error.message)
+    }
+  }
+
+  // chainlink: issuing proportionel prix actuel et quantité stakée
+  // AJOUTER EVENTS AU CONTRACT ET LES LISTENERS ICI
+  // MESSAGES D'ERREURS, Capter seulement le petit message et changer les alert en modal jolies
+  // utiliser le vrai DAI
+
+  if (!web3) {
+    return (
+      <div className="App" style={{ marginTop: 50 }}>
+        <Spinner animation="border" variant="dark" style={{ marginBottom: 20 }} />
+        <h3>Loading Web3, accounts, and contract...</h3>
+      </div>
+    )
+  }
+  return (
+    <div className="App" style={{ backgroundColor: '#EFF0D1', minHeight: "100vh" }}>
+      <Navbar accounts={accounts} />
+      <div style={{ paddingTop: 100 }}>
+        <Content
+          web3={web3}
+          daiBalance={daiBalance}
+          bibscoinBalance={bibscoinBalance}
+          bibsStakingBalance={bibsStakingBalance}
+          setDaiInput={setDaiInput}
+          stake={stake}
+          unstake={unstake}
+          issueReward={issueReward}
+        />
+      </div>
+    </div>
+  );
 }
 
 export default App;

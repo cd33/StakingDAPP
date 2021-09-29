@@ -9,15 +9,14 @@ module.exports = async function (deployer, _network, accounts) {
   await deployer.deploy(Dai, "5000000000000000000000");
   const dai = await Dai.deployed();
 
-  await deployer.deploy(Bibscoin, "5000000000000000000000");
+  await deployer.deploy(Bibscoin);
   const bibscoin = await Bibscoin.deployed();
 
   await deployer.deploy(BibsStaking, dai.address, bibscoin.address);
-  const bibsStaking = await BibsStaking.deployed();
+  // const bibsStaking = await BibsStaking.deployed();
 
-  // 1 millions de bibs
-  await bibscoin.transfer(bibsStaking.address, "1000000000000000000000");
+  // await bibscoin.transfer(bibsStaking.address, "1000000000000000000000");
 
-  // 100 dai
-  await dai.transfer(accounts[1], "100000000000000000000");
+  // 1000 dai
+  await dai.transfer(accounts[1], "1000000000000000000000");
 };

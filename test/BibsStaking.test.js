@@ -19,10 +19,8 @@ contract('BibsStaking', function (accounts) {
     describe("Bibs Staking Tests", async () => {
         beforeEach(async function () {
             dai = await Dai.new(_initialsupply);
-            bibscoin = await Bibscoin.new(_initialsupply);
+            bibscoin = await Bibscoin.new();
             bibsStaking = await BibsStaking.new(dai.address, bibscoin.address);
-
-            await bibscoin.transfer(bibsStaking.address, _initialsupply, { from: owner })
 
             await dai.transfer(investor, readable("100"), { from: owner })
         });
@@ -56,19 +54,9 @@ contract('BibsStaking', function (accounts) {
         })
 
         describe("Bibs Staking", async () => {
-            it("bibscoin balance", async function () {
-                expect(await bibscoin.balanceOf(bibsStaking.address)).to.be.bignumber.equal(_initialsupply);
-            })
-
-            it("dai balance", async function () {
-                expect(await dai.balanceOf(investor)).to.be.bignumber.equal(readable("100"));
-            })
-        })
-
-        describe("Bibs Staking", async () => {
             beforeEach(async function () {
                 await dai.approve(bibsStaking.address, readable("10"), { from: investor });
-                await bibsStaking.stakeTokens(readable("10"), { from: investor });
+                await bibsStaking.stake(readable("10"), { from: investor });
             });
 
             it("Stake", async function () {
@@ -85,19 +73,15 @@ contract('BibsStaking', function (accounts) {
                 expect(afterStakeFarmStaked).to.be.true;
             });
 
-            it("Issuing", async function () {
+            it("Issuing Reward", async function () {
                 const beforeIssuing = await bibscoin.balanceOf(investor)
                 expect(beforeIssuing).to.be.bignumber.equal("0");
 
-                await bibsStaking.issueTokens({ from: owner });
+                await bibsStaking.issueReward({ from: investor });
 
                 const afterIssuing = await bibscoin.balanceOf(investor)
-                expect(afterIssuing).to.be.bignumber.equal(readable("10"));
+                expect(afterIssuing).to.be.bignumber.equal(readable("1"));
             });
-
-            it("REVERT: issueTokens() is onlyOwner", async function () {
-                await expectRevert(bibsStaking.issueTokens({ from: investor }), "Ownable: caller is not the owner");
-            })
 
             it("Unstake", async function () {
                 const beforeUnstake = await bibsStaking.stakingBalance(investor)
@@ -112,7 +96,7 @@ contract('BibsStaking', function (accounts) {
                 const beforeIsStaking = await bibsStaking.isStaking(investor);
                 expect(beforeIsStaking).to.be.true
 
-                await bibsStaking.unstakeTokens(readable("10"), { from: investor });
+                await bibsStaking.unstake(readable("10"), { from: investor });
 
                 const afterUnstake = await bibsStaking.stakingBalance(investor)
                 expect(afterUnstake).to.be.bignumber.equal(readable("0"));
@@ -127,17 +111,17 @@ contract('BibsStaking', function (accounts) {
                 expect(afterIsStaking).to.be.false
             });
 
-            it("REVERT: unstakeTokens() amount negative", async function () {
-                await expectRevert(bibsStaking.unstakeTokens(readable("0"), { from: investor }), "The amount must be positive");
+            it("REVERT: unstake() amount negative", async function () {
+                await expectRevert(bibsStaking.unstake(readable("0"), { from: investor }), "The amount must be positive");
             })
 
-            it("REVERT: unstakeTokens() isStaking false", async function () {
-                await bibsStaking.unstakeTokens(readable("10"), { from: investor });
-                await expectRevert(bibsStaking.unstakeTokens(readable("10"), { from: investor }), "You don't own token staked");
+            it("REVERT: unstake() isStaking false", async function () {
+                await bibsStaking.unstake(readable("10"), { from: investor });
+                await expectRevert(bibsStaking.unstake(readable("10"), { from: investor }), "You don't own token staked");
             })
 
-            it("REVERT: unstakeTokens() amount too big", async function () {
-                await expectRevert(bibsStaking.unstakeTokens(readable("100"), { from: investor }), "You don't own as many tokens");
+            it("REVERT: unstake() amount too big", async function () {
+                await expectRevert(bibsStaking.unstake(readable("100"), { from: investor }), "You don't own as many tokens");
             })
         })
     });
