@@ -10,21 +10,16 @@ import { Spinner } from 'react-bootstrap';
 
 import "./App.css";
 
-// VIDEO 2h https://www.youtube.com/watch?v=CgXQC4dbGUE&list=PLqqTsZSw6kjlo3ZIWoWcM31E_F-17AWEH&index=5
-
 const App = () => {
   const [web3, setWeb3] = useState(null);
   const [accounts, setAccounts] = useState(null);
   const [dai, setDai] = useState(null);
   const [daiBalance, setDaiBalance] = useState(null);
   const [daiInput, setDaiInput] = useState(null);
-  const [daiInputErr, setDaiInputErr] = useState(null);
-  const [bibscoin, setBibscoin] = useState(null);
   const [bibscoinBalance, setBibscoinBalance] = useState(null);
   const [bibsStaking, setBibsStaking] = useState(null);
   const [bibsStakingBalance, setBibsStakingBalance] = useState(null);
-
-  const [loading, setLoading] = useState(true)
+  const [allowance, setAllowance] = useState(false)
 
   useEffect(() => {
     const init = async () => {
@@ -35,6 +30,8 @@ const App = () => {
         web3.eth.handleRevert = true;
         // Use web3 to get the user's accounts.
         const accounts = await web3.eth.getAccounts();
+
+        web3.eth.handleRevert = true;
 
         if (window.ethereum) {
           window.ethereum.on('accountsChanged', (accounts) => {
@@ -48,6 +45,11 @@ const App = () => {
         // Get the contract instance.
         const networkId = await web3.eth.net.getId();
 
+        if (networkId !== 1337 && networkId !== 42) {
+          alert("Please Switch to the Kovan Network");
+          return;
+        }
+
         // Load Dai
         const daiData = Dai.networks[networkId];
         const dai = new web3.eth.Contract(Dai.abi, daiData && daiData.address);
@@ -58,7 +60,6 @@ const App = () => {
         // Load Bibscoin
         const bibscoinData = Bibscoin.networks[networkId];
         const bibscoin = new web3.eth.Contract(Bibscoin.abi, bibscoinData && bibscoinData.address);
-        setBibscoin(bibscoin);
         let bibscoinBalance = await bibscoin.methods.balanceOf(accounts[0]).call();
         setBibscoinBalance(bibscoinBalance);
 
@@ -69,6 +70,8 @@ const App = () => {
         let bibsStakingBalance = await bibsStaking.methods.stakingBalance(accounts[0]).call();
         setBibsStakingBalance(bibsStakingBalance);
 
+        // Check the allowance
+        await dai.methods.allowance(accounts[0], bibsStaking._address).call().then(num => setAllowance(Number(num) !== 0))
 
         // Set web3, accounts, and the contracts to the state, and then proceed
         setWeb3(web3);
@@ -82,31 +85,46 @@ const App = () => {
     init();
   }, []);
 
-  const stake = async () => {
-    // setLoading(true)
-    const daiAmount = web3.utils.toWei(daiInput.value, 'Ether');
-    try {
-      dai.methods.approve(bibsStaking._address, daiAmount).send({ from: accounts[0] }).on('transactionHash', (hash) => {
-        bibsStaking.methods.stake(daiAmount).send({ from: accounts[0] }).on('transactionHash', (hash) => {
-          // setLoading(false);
-          window.location.reload();
-        })
-      })
-    }
-    catch (error) {
-      // setDaiInputErr(error.message);
-      console.log(error.message)
-    }
-  };
-
   // EVENTS
   // useEffect(() => {
   //   if (bibsStaking !== null) {
+  //     bibsStaking.events.Staked({fromBlock: 0})
+  //     .on('data', event => alert(`Transaction Approuved ${web3.utils.fromWei(event.returnValues.amount, 'Ether')} DAI`))
+  //     .on('error', err => alert(err.message))
+
   //     bibsStaking.events.Unstaked({fromBlock: 0})
   //     .on('data', event => alert(`Transaction Approuved ${web3.utils.fromWei(event.returnValues.amount, 'Ether')} DAI`))
-  //     .on('error', err => alert(err.message))   
+  //     .on('error', err => alert(err.message))
+  
+  //     bibsStaking.events.RewardIssued({fromBlock: 0})
+  //     .on('data', event => alert(`Transaction Approuved ${web3.utils.fromWei(event.returnValues.amount, 'Ether')} DAI`))
+  //     .on('error', err => alert(err.message))
   //   }
   // }, [bibsStaking])
+
+  const allow = async () => {
+    console.log("PAR ICI 1")
+    await dai.methods.approve(bibsStaking._address, -1).send({ from: accounts[0] }).then((res) => {
+      setAllowance(res.status === true);
+    });
+  }
+
+  const stake = async () => {
+    try {
+      const daiAmount = web3.utils.toWei(daiInput.value, 'Ether');
+    //   await dai.methods.approve(bibsStaking._address, daiAmount).send({ from: accounts[0] }).on('transactionHash', (hash) => {
+    //     bibsStaking.methods.stake(daiAmount).send({ from: accounts[0] }).on('transactionHash', (hash) => {
+    //       window.location.reload();
+    //     })
+    //   })
+      await bibsStaking.methods.stake(daiAmount).send({ from: accounts[0] }).on('transactionHash', (hash) => {
+        window.location.reload();
+      });
+    }
+    catch (error) {
+      console.log(error.message);
+    }
+  };
 
   const unstake = async () => {
     try {
@@ -126,7 +144,6 @@ const App = () => {
         }
       })
     } catch (error) {
-      // setDaiInputErr(error.message);
       console.log(error.message);
     }
   }
@@ -137,15 +154,18 @@ const App = () => {
         window.location.reload();
       })
     } catch (error) {
-      // setDaiInputErr(error.message);
       console.log(error.message)
     }
   }
 
-  // chainlink: issuing proportionel prix actuel et quantité stakée
   // AJOUTER EVENTS AU CONTRACT ET LES LISTENERS ICI
   // MESSAGES D'ERREURS, Capter seulement le petit message et changer les alert en modal jolies
-  // utiliser le vrai DAI
+  // utiliser le vrai DAI 0x4f96fe3b7a6cf9725f59d353f723c1bdb64ca6aa
+
+  // Chainlink: DAI/ETH https://kovan.etherscan.io/address/0x22B58f1EbEDfCA50feF632bD73368b2FdA96D541
+
+  // deploiment sur githubpage et heroku
+  // Voir grille de notation
 
   if (!web3) {
     return (
@@ -168,6 +188,8 @@ const App = () => {
           stake={stake}
           unstake={unstake}
           issueReward={issueReward}
+          allowance={allowance}
+          allow={allow}
         />
       </div>
     </div>

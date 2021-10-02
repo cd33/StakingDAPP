@@ -1,5 +1,6 @@
 const Dai = artifacts.require("Dai");
 const Bibscoin = artifacts.require("Bibscoin");
+const ChainlinkDaiTests = artifacts.require("ChainlinkDaiTests");
 const BibsStaking = artifacts.require("BibsStaking");
 
 // const tokenAddress = "0x4F96Fe3b7A6Cf9725f59d353F723c1bDb64CA6Aa"; //DAI
@@ -12,7 +13,10 @@ module.exports = async function (deployer, _network, accounts) {
   await deployer.deploy(Bibscoin);
   const bibscoin = await Bibscoin.deployed();
 
-  await deployer.deploy(BibsStaking, dai.address, bibscoin.address);
+  await deployer.deploy(ChainlinkDaiTests);
+  const chainlinkDaiTests = await ChainlinkDaiTests.deployed();
+
+  await deployer.deploy(BibsStaking, dai.address, bibscoin.address, chainlinkDaiTests.address);
   // const bibsStaking = await BibsStaking.deployed();
 
   // await bibscoin.transfer(bibsStaking.address, "1000000000000000000000");

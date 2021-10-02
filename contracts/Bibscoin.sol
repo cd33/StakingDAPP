@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT 
-pragma solidity 0.8.8;
+pragma solidity 0.8.9;
 import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
 import "@openzeppelin/contracts/access/Ownable.sol";
  
@@ -8,6 +8,7 @@ contract Bibscoin is ERC20 {
 //    _mint(msg.sender, initialSupply);
 //  } 
 
+// @notice Ownership must be transfered to HappyChef, for reward minting. ?????????????????????????
 constructor() ERC20('Bibscoin', 'BIBS') {}
 
 function mint(address recipient, uint256 amount) external {
