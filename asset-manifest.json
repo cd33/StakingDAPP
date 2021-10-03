@@ -1,0 +1,23 @@
+{
+  "files": {
+    "main.css": "/StakingDAPP/static/css/main.91d7ac6c.chunk.css",
+    "main.js": "/StakingDAPP/static/js/main.b9e3d97c.chunk.js",
+    "main.js.map": "/StakingDAPP/static/js/main.b9e3d97c.chunk.js.map",
+    "runtime-main.js": "/StakingDAPP/static/js/runtime-main.e1f6a6c7.js",
+    "runtime-main.js.map": "/StakingDAPP/static/js/runtime-main.e1f6a6c7.js.map",
+    "static/css/2.f2512455.chunk.css": "/StakingDAPP/static/css/2.f2512455.chunk.css",
+    "static/js/2.e1108aca.chunk.js": "/StakingDAPP/static/js/2.e1108aca.chunk.js",
+    "static/js/2.e1108aca.chunk.js.map": "/StakingDAPP/static/js/2.e1108aca.chunk.js.map",
+    "index.html": "/StakingDAPP/index.html",
+    "static/css/2.f2512455.chunk.css.map": "/StakingDAPP/static/css/2.f2512455.chunk.css.map",
+    "static/css/main.91d7ac6c.chunk.css.map": "/StakingDAPP/static/css/main.91d7ac6c.chunk.css.map",
+    "static/js/2.e1108aca.chunk.js.LICENSE.txt": "/StakingDAPP/static/js/2.e1108aca.chunk.js.LICENSE.txt"
+  },
+  "entrypoints": [
+    "static/js/runtime-main.e1f6a6c7.js",
+    "static/css/2.f2512455.chunk.css",
+    "static/js/2.e1108aca.chunk.js",
+    "static/css/main.91d7ac6c.chunk.css",
+    "static/js/main.b9e3d97c.chunk.js"
+  ]
+}
