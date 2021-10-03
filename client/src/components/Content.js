@@ -6,7 +6,6 @@ const Content = ({ web3, daiBalance, bibscoinBalance, bibsStakingBalance, setDai
     <Container style={{ backgroundColor: 'white', borderRadius: 20, width: "80vh", padding: 20 }}>
         Staking DAI
         <br /><br />
-        {console.log("test Content", allowance)}
         {!allowance &&
             <Button onClick={allow} variant="primary" className="mb-2">Unlock</Button>
         }

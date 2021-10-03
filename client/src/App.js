@@ -31,7 +31,7 @@ const App = () => {
         // Use web3 to get the user's accounts.
         const accounts = await web3.eth.getAccounts();
 
-        web3.eth.handleRevert = true;
+        // web3.eth.handleRevert = true;
 
         if (window.ethereum) {
           window.ethereum.on('accountsChanged', (accounts) => {
@@ -73,6 +73,14 @@ const App = () => {
         // Check the allowance
         await dai.methods.allowance(accounts[0], bibsStaking._address).call().then(num => setAllowance(Number(num) !== 0))
 
+        web3.eth.subscribe('newBlockHeaders', async (err, res) => {
+          if (!err) {
+            await dai.methods.balanceOf(accounts[0]).call().then((res) => setDaiBalance(res));
+            await bibscoin.methods.balanceOf(accounts[0]).call().then((res) => setBibscoinBalance(res));
+            await bibsStaking.methods.stakingBalance(accounts[0]).call().then((res) => setBibsStakingBalance(res));
+          }
+        });
+
         // Set web3, accounts, and the contracts to the state, and then proceed
         setWeb3(web3);
         setAccounts(accounts);
@@ -86,21 +94,21 @@ const App = () => {
   }, []);
 
   // EVENTS
-  // useEffect(() => {
-  //   if (bibsStaking !== null) {
-  //     bibsStaking.events.Staked({fromBlock: 0})
-  //     .on('data', event => alert(`Transaction Approuved ${web3.utils.fromWei(event.returnValues.amount, 'Ether')} DAI`))
-  //     .on('error', err => alert(err.message))
+  useEffect(() => {
+    if (bibsStaking !== null && web3 !== null) {
+      bibsStaking.events.Staked({fromBlock: 0})
+      .on('data', event => alert(`Transaction Approuved: ${web3.utils.fromWei(event.returnValues.amount, 'Ether')} DAI staked`))
+      .on('error', err => alert(err.message))
 
-  //     bibsStaking.events.Unstaked({fromBlock: 0})
-  //     .on('data', event => alert(`Transaction Approuved ${web3.utils.fromWei(event.returnValues.amount, 'Ether')} DAI`))
-  //     .on('error', err => alert(err.message))
+      bibsStaking.events.Unstaked({fromBlock: 0})
+      .on('data', event => alert(`Transaction Approuved: ${web3.utils.fromWei(event.returnValues.amount, 'Ether')} DAI unstaked`))
+      .on('error', err => alert(err.message))
   
-  //     bibsStaking.events.RewardIssued({fromBlock: 0})
-  //     .on('data', event => alert(`Transaction Approuved ${web3.utils.fromWei(event.returnValues.amount, 'Ether')} DAI`))
-  //     .on('error', err => alert(err.message))
-  //   }
-  // }, [bibsStaking])
+      bibsStaking.events.RewardIssued({fromBlock: 0})
+      .on('data', event => alert(`Transaction Approuved: ${web3.utils.fromWei(event.returnValues.amount, 'Ether')} BIBS issued`))
+      .on('error', err => alert(err.message))
+    }
+  }, [bibsStaking, web3])
 
   const allow = async () => {
     console.log("PAR ICI 1")
@@ -112,14 +120,7 @@ const App = () => {
   const stake = async () => {
     try {
       const daiAmount = web3.utils.toWei(daiInput.value, 'Ether');
-    //   await dai.methods.approve(bibsStaking._address, daiAmount).send({ from: accounts[0] }).on('transactionHash', (hash) => {
-    //     bibsStaking.methods.stake(daiAmount).send({ from: accounts[0] }).on('transactionHash', (hash) => {
-    //       window.location.reload();
-    //     })
-    //   })
-      await bibsStaking.methods.stake(daiAmount).send({ from: accounts[0] }).on('transactionHash', (hash) => {
-        window.location.reload();
-      });
+      await bibsStaking.methods.stake(daiAmount).send({ from: accounts[0] });
     }
     catch (error) {
       console.log(error.message);
@@ -127,22 +128,28 @@ const App = () => {
   };
 
   const unstake = async () => {
+    // try {
+    //   const daiAmount = web3.utils.toWei(daiInput.value, 'Ether');
+    //   await bibsStaking.methods.unstake(daiAmount).send({ from: accounts[0] }, function (err) {
+    //     if (err) {
+    //       if (err.message.length < 100) {
+    //         alert(err.message)
+    //         window.location.reload();
+    //       } else {
+    //         alert(err.message.substring(149, 177));
+    //         window.location.reload();
+    //       }
+    //     } else {
+    //       alert("Transaction Approuved");
+    //       window.location.reload();
+    //     }
+    //   })
+    // } catch (error) {
+    //   console.log(error.message);
+    // }
     try {
       const daiAmount = web3.utils.toWei(daiInput.value, 'Ether');
-      await bibsStaking.methods.unstake(daiAmount).send({ from: accounts[0] }, function (err) {
-        if (err) {
-          if (err.message.length < 100) {
-            alert(err.message)
-            window.location.reload();
-          } else {
-            alert(err.message.substring(149, 177));
-            window.location.reload();
-          }
-        } else {
-          alert("Transaction Approuved");
-          window.location.reload();
-        }
-      })
+      await bibsStaking.methods.unstake(daiAmount).send({ from: accounts[0] });
     } catch (error) {
       console.log(error.message);
     }
@@ -150,15 +157,12 @@ const App = () => {
 
   const issueReward = async () => {
     try {
-      await bibsStaking.methods.issueReward().send({ from: accounts[0] }).on('transactionHash', (hash) => {
-        window.location.reload();
-      })
+      await bibsStaking.methods.issueReward().send({ from: accounts[0] })
     } catch (error) {
       console.log(error.message)
     }
   }
 
-  // AJOUTER EVENTS AU CONTRACT ET LES LISTENERS ICI
   // MESSAGES D'ERREURS, Capter seulement le petit message et changer les alert en modal jolies
   // utiliser le vrai DAI 0x4f96fe3b7a6cf9725f59d353f723c1bdb64ca6aa
 
