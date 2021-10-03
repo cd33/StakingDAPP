@@ -73,6 +73,7 @@ const App = () => {
         // Check the allowance
         await dai.methods.allowance(accounts[0], bibsStaking._address).call().then(num => setAllowance(Number(num) !== 0))
 
+        // Subscribe to the contract states to update the front states
         web3.eth.subscribe('newBlockHeaders', async (err, res) => {
           if (!err) {
             await dai.methods.balanceOf(accounts[0]).call().then((res) => setDaiBalance(res));
@@ -111,7 +112,6 @@ const App = () => {
   }, [bibsStaking, web3])
 
   const allow = async () => {
-    console.log("PAR ICI 1")
     await dai.methods.approve(bibsStaking._address, -1).send({ from: accounts[0] }).then((res) => {
       setAllowance(res.status === true);
     });

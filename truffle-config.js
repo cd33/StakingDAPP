@@ -14,11 +14,11 @@ module.exports = {
    */
   contracts_build_directory: path.join(__dirname, "client/src/contracts"),
   networks: {
-    development: {
-     host: "127.0.0.1",     // Localhost (default: none)
-     port: 7545,            // Standard Ethereum port (default: none)
-     network_id: 1337,       // Any network (default: none)
-    },
+    // development: {
+    //  host: "127.0.0.1",     // Localhost (default: none)
+    //  port: 7545,            // Standard Ethereum port (default: none)
+    //  network_id: 1337,       // Any network (default: none)
+    // },
     kovan: {
       provider: () => new HDWalletProvider(process.env.MNEMONIC, process.env.INFURA),
       network_id: 42,
