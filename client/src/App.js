@@ -102,7 +102,7 @@ const App = () => {
       .on('error', err => alert(err.message))
 
       bibsStaking.events.Unstaked({fromBlock: 0})
-      .on('data', event => alert(`Transaction Approuved: ${web3.utils.fromWei(event.returnValues.amount, 'Ether')} DAI unstaked`))
+      .on('data', event => event.returnValues.amount !== "0" && alert(`Transaction Approuved: ${web3.utils.fromWei(event.returnValues.amount, 'Ether')} DAI unstaked`))
       .on('error', err => alert(err.message))
   
       bibsStaking.events.RewardIssued({fromBlock: 0})
@@ -110,6 +110,15 @@ const App = () => {
       .on('error', err => alert(err.message))
     }
   }, [bibsStaking, web3])
+
+  useEffect(() => {
+    if (dai !== null && web3 !== null) {
+      dai.events.Transfer({fromBlock: 0})
+      .on('data', event => alert(`Transaction Approuved: ${web3.utils.fromWei((event.returnValues.value).toString(), 'Ether')} DAI transfered`))
+      .on('error', err => alert(err.message))
+    }
+  }, [dai, web3])
+  
 
   const allow = async () => {
     await dai.methods.approve(bibsStaking._address, -1).send({ from: accounts[0] }).then((res) => {
@@ -157,7 +166,20 @@ const App = () => {
 
   const issueReward = async () => {
     try {
-      await bibsStaking.methods.issueReward().send({ from: accounts[0] })
+      await bibsStaking.methods.unstake(0).send({ from: accounts[0] })
+    } catch (error) {
+      console.log(error.message)
+    }
+  }
+
+  const mintDai = async () => {
+    try {
+      console.log("yo")
+      const amount = web3.utils.toWei("1000", 'Ether')
+      console.log(amount)
+      console.log("yo")
+      console.log(amount.toString())
+      await dai.methods.mint(accounts[0], amount).send({ from: accounts[0] });
     } catch (error) {
       console.log(error.message)
     }
@@ -194,6 +216,7 @@ const App = () => {
           issueReward={issueReward}
           allowance={allowance}
           allow={allow}
+          mintDai={mintDai}
         />
       </div>
     </div>

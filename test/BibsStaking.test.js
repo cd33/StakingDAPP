@@ -24,7 +24,9 @@ contract('BibsStaking', function (accounts) {
             chainlinkDaiTests = await ChainlinkDaiTests.new();
             bibsStaking = await BibsStaking.new(dai.address, bibscoin.address, chainlinkDaiTests.address);
 
-            await dai.transfer(investor, readable("100"), { from: owner })
+            await bibscoin.transferOwnership(bibsStaking.address, { from: owner });
+
+            await dai.mint(investor, readable("100"), { from: investor })
         });
 
         describe("DAI", async () => {
@@ -96,6 +98,8 @@ contract('BibsStaking', function (accounts) {
                 const beforeIsStaking = await bibsStaking.isStaking(investor);
                 expect(beforeIsStaking).to.be.true
 
+                await timeout(2000);
+
                 await bibsStaking.unstake(readable("10"), { from: investor });
 
                 const afterUnstake = await bibsStaking.stakingBalance(investor)
@@ -111,17 +115,15 @@ contract('BibsStaking', function (accounts) {
                 expect(afterIsStaking).to.be.false
             });
 
-            it("REVERT: unstake() amount negative", async function () {
-                await expectRevert(bibsStaking.unstake(readable("0"), { from: investor }), "The amount must be positive");
+            it("REVERT: unstake() insufficient amount", async function () {
+                await timeout(2000);
+                await expectRevert(bibsStaking.unstake(readable("100"), { from: investor }), "Insufficient staked amount");
             });
 
             it("REVERT: unstake() isStaking false", async function () {
+                await timeout(2000);
                 await bibsStaking.unstake(readable("10"), { from: investor });
                 await expectRevert(bibsStaking.unstake(readable("10"), { from: investor }), "You don't own token staked");
-            });
-
-            it("REVERT: unstake() amount too big", async function () {
-                await expectRevert(bibsStaking.unstake(readable("100"), { from: investor }), "You don't own as many tokens");
             });
 
             it("Issue Rewards", async function () {
@@ -130,28 +132,16 @@ contract('BibsStaking', function (accounts) {
 
                 await timeout(2000);
 
-                await bibsStaking.issueReward({ from: investor });
+                await bibsStaking.unstake(0, { from: investor });
 
                 const afterIssuing = await bibscoin.balanceOf(investor);
                 expect(afterIssuing).to.be.bignumber.equal("3000000000000");
             });
 
-            it("REVERT: issueReward() isStaking false", async function () {
-                await bibsStaking.unstake(readable("10"), { from: investor });
-                await expectRevert(bibsStaking.issueReward({ from: investor }), "You don't own token staked");
-            });
-
-            it("REVERT: issueReward() No Reward available !", async function () {
-                await timeout(2000);
-                await bibsStaking.issueReward({ from: investor });
-                await timeout(2000);
-                await expectRevert(bibsStaking.issueReward({ from: investor }), "No Reward available !");
-            });
-
             it("REVERT: issueReward() Claim again before 1 second", async function () {
                 await timeout(2000);
-                await bibsStaking.issueReward({ from: investor });
-                await expectRevert(bibsStaking.issueReward({ from: investor }), "Wait at least 1 second to claim again rewards");
+                await bibsStaking.unstake(0, { from: investor });
+                await expectRevert(bibsStaking.unstake(0, { from: investor }), "Wait at least 1 second to claim again rewards");
             });
         })
     });

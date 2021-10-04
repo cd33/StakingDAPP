@@ -1,22 +1,20 @@
-// SPDX-License-Identifier: MIT 
+// SPDX-License-Identifier: MIT
 pragma solidity 0.8.9;
-import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
- 
-contract Bibscoin is ERC20 {
-//  constructor(uint256 initialSupply) ERC20('Bibscoin', 'BIBS') {
-//    _mint(msg.sender, initialSupply);
-//  } 
 
-// @notice Ownership must be transfered to HappyChef, for reward minting. ?????????????????????????
-constructor() ERC20('Bibscoin', 'BIBS') {}
+/** @title Bibscoin Token. */
+/** @dev Homemade token, Ownership must be transfered to BibsStaking, for reward minting. */
+contract Bibscoin is ERC20, Ownable {
+    /** @notice Constructor of the token. */
+    constructor() ERC20("Bibscoin", "BIBS") {}
 
-function mint(address recipient, uint256 amount) external {
-  _mint(recipient, amount);
-}
-
-//  // fonction faucet pour créer des Bibs tokens
-//  function faucet(address recipient, uint amount) external {
-//    _mint(recipient, amount);
-//  }
+    /** @notice Mint Bibscoin.
+     * @dev OnlyOwner only the owner can execute this function.
+     * @param recipient The recipient for the token.
+     * @param amount The amount of token.
+     */
+    function mint(address recipient, uint256 amount) external onlyOwner {
+        _mint(recipient, amount);
+    }
 }
