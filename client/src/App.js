@@ -104,15 +104,15 @@ const App = () => {
     if (bibsStaking !== null && web3 !== null) {
       bibsStaking.events.Staked({fromBlock: 0})
       .on('data', event => handleModal("Transaction Approuved", `${web3.utils.fromWei(event.returnValues.amount, 'Ether')} DAI staked`))
-      .on('error', err => handleModal("Error", err.message))
+      .on('error', err => alert("Error", err.message))
 
       bibsStaking.events.Unstaked({fromBlock: 0})
       .on('data', event => event.returnValues.amount !== "0" && handleModal("Transaction Approuved", `${web3.utils.fromWei(event.returnValues.amount, 'Ether')} DAI unstaked`))
-      .on('error', err => handleModal("Error", err.message))
+      .on('error', err => alert("Error", err.message))
   
       bibsStaking.events.RewardIssued({fromBlock: 0})
       .on('data', event => handleModal("Transaction Approuved", `${web3.utils.fromWei(event.returnValues.amount, 'Ether')} BIBS issued`))
-      .on('error', err => handleModal("Error", err.message))
+      .on('error', err => alert("Error", err.message))
     }
   }, [bibsStaking, web3])
 
@@ -136,7 +136,7 @@ const App = () => {
       await bibsStaking.methods.stake(daiAmount).send({ from: accounts[0] });
     }
     catch (error) {
-      console.log(error.message);
+      handleModal("Error", error.message);
     }
   };
 
@@ -145,7 +145,7 @@ const App = () => {
       const daiAmount = web3.utils.toWei(daiInput.value, 'Ether');
       await bibsStaking.methods.unstake(daiAmount).send({ from: accounts[0] });
     } catch (error) {
-      console.log(error.message);
+      handleModal("Error", error.message);
     }
   }
 
@@ -153,7 +153,7 @@ const App = () => {
     try {
       await bibsStaking.methods.unstake(0).send({ from: accounts[0] })
     } catch (error) {
-      console.log(error.message)
+      handleModal("Error", error.message);
     }
   }
 
@@ -161,7 +161,7 @@ const App = () => {
     try {
       await dai.methods.mint(accounts[0], web3.utils.toWei("1000", 'Ether')).send({ from: accounts[0] });
     } catch (error) {
-      console.log(error.message)
+      handleModal("Error", error.message);
     }
   }
 
