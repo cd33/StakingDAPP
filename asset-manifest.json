@@ -1,8 +1,8 @@
 {
   "files": {
     "main.css": "/StakingDAPP/static/css/main.91d7ac6c.chunk.css",
-    "main.js": "/StakingDAPP/static/js/main.06e309d0.chunk.js",
-    "main.js.map": "/StakingDAPP/static/js/main.06e309d0.chunk.js.map",
+    "main.js": "/StakingDAPP/static/js/main.90ab27d4.chunk.js",
+    "main.js.map": "/StakingDAPP/static/js/main.90ab27d4.chunk.js.map",
     "runtime-main.js": "/StakingDAPP/static/js/runtime-main.e1f6a6c7.js",
     "runtime-main.js.map": "/StakingDAPP/static/js/runtime-main.e1f6a6c7.js.map",
     "static/css/2.f2512455.chunk.css": "/StakingDAPP/static/css/2.f2512455.chunk.css",
@@ -18,6 +18,6 @@
     "static/css/2.f2512455.chunk.css",
     "static/js/2.97151cf6.chunk.js",
     "static/css/main.91d7ac6c.chunk.css",
-    "static/js/main.06e309d0.chunk.js"
+    "static/js/main.90ab27d4.chunk.js"
   ]
 }
