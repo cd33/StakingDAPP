@@ -85,6 +85,10 @@ contract('BibsStaking', function (accounts) {
                 await expectRevert(bibsStaking.stake(readable("0"), { from: investor }), "The amount must be positive");
             });
 
+            it("REVERT: stake() insufficient balance", async function () {
+                await expectRevert(bibsStaking.stake(readable("10000"), { from: investor }), "Insufficient balance");
+            });
+
             it("Unstake", async function () {
                 const beforeUnstake = await bibsStaking.stakingBalance(investor)
                 expect(beforeUnstake).to.be.bignumber.equal(readable("10"));
@@ -115,15 +119,15 @@ contract('BibsStaking', function (accounts) {
                 expect(afterIsStaking).to.be.false
             });
 
-            it("REVERT: unstake() insufficient amount", async function () {
-                await timeout(2000);
-                await expectRevert(bibsStaking.unstake(readable("100"), { from: investor }), "Insufficient staked amount");
-            });
-
             it("REVERT: unstake() isStaking false", async function () {
                 await timeout(2000);
                 await bibsStaking.unstake(readable("10"), { from: investor });
                 await expectRevert(bibsStaking.unstake(readable("10"), { from: investor }), "You don't own token staked");
+            });
+
+            it("REVERT: unstake() insufficient amount", async function () {
+                await timeout(2000);
+                await expectRevert(bibsStaking.unstake(readable("100"), { from: investor }), "Insufficient staked amount");
             });
 
             it("Issue Rewards", async function () {

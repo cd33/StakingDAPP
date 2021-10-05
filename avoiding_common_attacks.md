@@ -1,4 +1,13 @@
 ## Avoiding Common Attacks
 
-* 
-* Inputs to ```createListing``` function are validated using ```require```. The listing Title is limited to 32 characters and listing Description to 256 characters.  Listing Price is required to be greater than zero to prevent underflow.  
+### Re-Entrancy
+To avoid re-entrancy, I use the Checks-Effects-Interactions pattern for my functions:
+* Use of require
+* State changes
+* Interactions with contracts
+
+### Underflow / Overflow
+Uints used in functions must be greater than or equal to zero and less than a certain value to avoid Underflow / Overflow.
+
+### Internal
+Declaration of some functions as internal to avoid unnecessary external interactions.

@@ -5,6 +5,7 @@ import BibsStaking from "./contracts/BibsStaking.json";
 import getWeb3 from "./getWeb3";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Navbar from "./components/Navbar";
+import Modal from "./components/Modal";
 import Content from "./components/Content";
 import { Spinner } from 'react-bootstrap';
 
@@ -19,7 +20,10 @@ const App = () => {
   const [bibscoinBalance, setBibscoinBalance] = useState(null);
   const [bibsStaking, setBibsStaking] = useState(null);
   const [bibsStakingBalance, setBibsStakingBalance] = useState(null);
-  const [allowance, setAllowance] = useState(false)
+  const [allowance, setAllowance] = useState(false);
+  const [modalShow, setModalShow] = useState(false);
+  const [titleModal, setTitleModal] = useState(false);
+  const [contentModal, setContentModal] = useState(false);
 
   useEffect(() => {
     const init = async () => {
@@ -46,7 +50,8 @@ const App = () => {
         const networkId = await web3.eth.net.getId();
 
         if (networkId !== 1337 && networkId !== 42) {
-          alert("Please Switch to the Kovan Network");
+          handleModal("Problem Network", "Please Switch to the Kovan Network");
+          // alert("Please Switch to the Kovan Network");
           return;
         }
 
@@ -87,7 +92,7 @@ const App = () => {
         setAccounts(accounts);
       } catch (error) {
         // Catch any errors for any of the above operations.
-        alert(`Failed to load web3, accounts, or contract. Check console for details.`,);
+        handleModal("Error", `Failed to load web3, accounts, or contract. Check console for details.`,);
         console.error(error);
       }
     }
@@ -98,27 +103,26 @@ const App = () => {
   useEffect(() => {
     if (bibsStaking !== null && web3 !== null) {
       bibsStaking.events.Staked({fromBlock: 0})
-      .on('data', event => alert(`Transaction Approuved: ${web3.utils.fromWei(event.returnValues.amount, 'Ether')} DAI staked`))
-      .on('error', err => alert(err.message))
+      .on('data', event => handleModal("Transaction Approuved", `${web3.utils.fromWei(event.returnValues.amount, 'Ether')} DAI staked`))
+      .on('error', err => handleModal("Error", err.message))
 
       bibsStaking.events.Unstaked({fromBlock: 0})
-      .on('data', event => event.returnValues.amount !== "0" && alert(`Transaction Approuved: ${web3.utils.fromWei(event.returnValues.amount, 'Ether')} DAI unstaked`))
-      .on('error', err => alert(err.message))
+      .on('data', event => event.returnValues.amount !== "0" && handleModal("Transaction Approuved", `${web3.utils.fromWei(event.returnValues.amount, 'Ether')} DAI unstaked`))
+      .on('error', err => handleModal("Error", err.message))
   
       bibsStaking.events.RewardIssued({fromBlock: 0})
-      .on('data', event => alert(`Transaction Approuved: ${web3.utils.fromWei(event.returnValues.amount, 'Ether')} BIBS issued`))
-      .on('error', err => alert(err.message))
+      .on('data', event => handleModal("Transaction Approuved", `${web3.utils.fromWei(event.returnValues.amount, 'Ether')} BIBS issued`))
+      .on('error', err => handleModal("Error", err.message))
     }
   }, [bibsStaking, web3])
 
-  useEffect(() => {
-    if (dai !== null && web3 !== null) {
-      dai.events.Transfer({fromBlock: 0})
-      .on('data', event => alert(`Transaction Approuved: ${web3.utils.fromWei((event.returnValues.value).toString(), 'Ether')} DAI transfered`))
-      .on('error', err => alert(err.message))
-    }
-  }, [dai, web3])
-  
+  // useEffect(() => {
+  //   if (dai !== null && web3 !== null) {
+  //     dai.events.Transfer({fromBlock: 0})
+  //     .on('data', event => handleModal("Transaction Approuved", `${web3.utils.fromWei((event.returnValues.value).toString(), 'Ether')} DAI transfered`))
+  //     .on('error', err => handleModal("Error", err.message))
+  //   }
+  // }, [dai, web3])
 
   const allow = async () => {
     await dai.methods.approve(bibsStaking._address, -1).send({ from: accounts[0] }).then((res) => {
@@ -137,25 +141,6 @@ const App = () => {
   };
 
   const unstake = async () => {
-    // try {
-    //   const daiAmount = web3.utils.toWei(daiInput.value, 'Ether');
-    //   await bibsStaking.methods.unstake(daiAmount).send({ from: accounts[0] }, function (err) {
-    //     if (err) {
-    //       if (err.message.length < 100) {
-    //         alert(err.message)
-    //         window.location.reload();
-    //       } else {
-    //         alert(err.message.substring(149, 177));
-    //         window.location.reload();
-    //       }
-    //     } else {
-    //       alert("Transaction Approuved");
-    //       window.location.reload();
-    //     }
-    //   })
-    // } catch (error) {
-    //   console.log(error.message);
-    // }
     try {
       const daiAmount = web3.utils.toWei(daiInput.value, 'Ether');
       await bibsStaking.methods.unstake(daiAmount).send({ from: accounts[0] });
@@ -174,28 +159,22 @@ const App = () => {
 
   const mintDai = async () => {
     try {
-      console.log("yo")
-      const amount = web3.utils.toWei("1000", 'Ether')
-      console.log(amount)
-      console.log("yo")
-      console.log(amount.toString())
-      await dai.methods.mint(accounts[0], amount).send({ from: accounts[0] });
+      await dai.methods.mint(accounts[0], web3.utils.toWei("1000", 'Ether')).send({ from: accounts[0] });
     } catch (error) {
       console.log(error.message)
     }
   }
 
-  // MESSAGES D'ERREURS, Capter seulement le petit message et changer les alert en modal jolies
-  // utiliser le vrai DAI 0x4f96fe3b7a6cf9725f59d353f723c1bdb64ca6aa
-
-  // Chainlink: DAI/ETH https://kovan.etherscan.io/address/0x22B58f1EbEDfCA50feF632bD73368b2FdA96D541
-
-  // deploiment sur githubpage et heroku
-  // Voir grille de notation
+  const handleModal = (title, content) => {
+    setTitleModal(title);
+    setContentModal(content);
+    setModalShow(true);
+  }
 
   if (!web3) {
     return (
       <div className="App" style={{ marginTop: 50 }}>
+        <Modal modalShow={modalShow} setModalShow={setModalShow} title={titleModal} content={contentModal} />
         <Spinner animation="border" variant="dark" style={{ marginBottom: 20 }} />
         <h3>Loading Web3, accounts, and contract...</h3>
       </div>
@@ -205,6 +184,7 @@ const App = () => {
     <div className="App" style={{ backgroundColor: '#EFF0D1', minHeight: "100vh" }}>
       <Navbar accounts={accounts} />
       <div style={{ paddingTop: 100 }}>
+        <Modal modalShow={modalShow} setModalShow={setModalShow} title={titleModal} content={contentModal} />
         <Content
           web3={web3}
           daiBalance={daiBalance}

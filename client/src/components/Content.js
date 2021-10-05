@@ -8,7 +8,7 @@ const Content = ({ web3, daiBalance, bibscoinBalance, bibsStakingBalance, setDai
         <br /><br />
         {!allowance ?
             <Button onClick={allow} variant="primary" className="mb-2">Unlock</Button>
-        : <> { daiBalance <= 0 ?
+        : <> { daiBalance <= 0 && bibsStakingBalance <= 0 ?
                 <Button onClick={mintDai} variant="primary" className="mb-2">Mint Dai</Button>
             : <>
                 <Row className="justify-content-md-center">

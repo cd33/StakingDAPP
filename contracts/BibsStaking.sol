@@ -53,7 +53,7 @@ contract BibsStaking {
     /** @notice Calculate the Reward of Bibscoin token.
      * @dev The function uses the current DAI/ETH rate and calculates the period over which DAIs are stacked.
      */
-    function calculateReward() public view returns (uint256) {
+    function calculateReward() internal view returns (uint256) {
         if (stakingBalance[msg.sender] == 0) {
             return 0;
         }
@@ -80,16 +80,19 @@ contract BibsStaking {
      */
     function stake(uint256 _amount) external {
         require(_amount > 0, "The amount must be positive");
-        dai.transferFrom(msg.sender, address(this), _amount);
+        require(dai.balanceOf(msg.sender) >= _amount && dai.balanceOf(address(this)) + _amount >= dai.balanceOf(address(this)), "Insufficient balance");
+
         if (isStaking[msg.sender]) {
             issueReward();
-        }
-        stakingBalance[msg.sender] = stakingBalance[msg.sender].add(_amount);
-        if (!isStaking[msg.sender]) {
+        } else {
             isStaking[msg.sender] = true;
             timestamp[msg.sender] = block.timestamp;
             stakers.push(msg.sender);
         }
+
+        stakingBalance[msg.sender] = stakingBalance[msg.sender].add(_amount);
+        dai.transferFrom(msg.sender, address(this), _amount);
+
         emit Staked(msg.sender, _amount);
     }
 
@@ -107,6 +110,7 @@ contract BibsStaking {
             stakingBalance[msg.sender] = stakingBalance[msg.sender].sub(_amount);
             dai.transfer(msg.sender, _amount);
         }
+        
         if (stakingBalance[msg.sender] == 0) {
             isStaking[msg.sender] = false;
         }

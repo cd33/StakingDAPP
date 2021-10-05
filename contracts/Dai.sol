@@ -2,8 +2,9 @@
 pragma solidity 0.8.9;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-/** @title Dai Token. */
-/** @dev Homemade Dai token with free mint, Not secure, for test only */
+/** @title Dai Token.
+ * @dev Homemade Dai token with free mint, Not secure, for test only
+ */
 contract Dai is ERC20 {
     /** @notice Constructor of the token.
      * @param initialSupply Total number of tokens issued at the initial supply.
